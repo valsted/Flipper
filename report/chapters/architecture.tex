@@ -1,0 +1,138 @@
+%TODO and (iii) describe your implementation
+The primary modules of the implementation, shown in figure \ref{fig:project-structure}, are described in the following sections.
+\begin{figure}[H]\label{fig:project-structure}
+	\centering
+	\includegraphics[width=\linewidth]{images/project-structure}
+	\caption{The structure of the primary modules of the implementation of Ariel Water.}
+\end{figure}
+
+%%%%%%%%% LEAK DETECTION IMPLEMENTATION %%%%%%%%%
+\section{Leak Detection}
+\label{sec:dec}
+The leak detection system is implemented with \textit{privacy-by-design} in mind. A minimal amount of variables and previous values are cached or stored, whilst avoiding arithmetic overflows and loss of precision. Welford's on-line algorithm is adapted to achieve this.\\\\
+We only store the measurement count, mean, variance, and standard deviation of every water meter in a single pass in the database, hereby inspecting a new water measurement value, $x_i$, only once. The most challenging part of this is to calculate the variance, and hereby the standard deviation, without inspecting previous values.\\\\
+To update these variables, three overall steps are taken, \ref{eq:new_mean}, \ref{eq:variance}, and \ref{eq:std_dev}. First, the mean is updated,
+\[
+\overline{x}_n = \overline{x}_{n-1} + \frac{x_n - \overline{x}_{n-1}}{n},
+\tag{4.1}
+\label{eq:new_mean}
+\]
+where $\overline{x}_n$ is the new mean, $\overline{x}_{n-1}$ is the old mean, $x_n$ is the new value, and $n$ is the total number of values including the new value, $x_n$. Then the variance is updated,
+\[
+\sigma_n^2 = (n-1) \cdot \frac{\sigma_{n-1}^2}{n} + \frac{(x_n - \overline{x}_{n-1}) \cdot (x_n - \overline{x}_{n})}{n},
+\tag{4.2}
+\label{eq:variance}
+\]
+where $\sigma_n^2$ is the new variance, $\sigma_{n-1}^2$ is the old variance, $\overline{x}_n$ is the new mean, $\overline{x}_{n-1}$ is the old mean, $x_n$ is the new value, and $n$ is the total number of value including the new value, $x_n$. Finally, the standard deviation is updated,
+\[
+\sigma_n = \sqrt{\sigma_n^2},
+\tag{4.3}
+\label{eq:std_dev}
+\]
+where $\sigma_n$ is the new standard deviation and $\sigma_n^2$ is the new variance.\\\\
+A possible leak is detected using the new mean, $\overline{x}_n$, the new standard deviation, $\sigma_n$, and two specified factors, \verb|LEAK_FACTOR| (LF) and \verb|LEAK_LIMIT| (LL). In case the condition \ref{eq:leak_detection} is met a leak is reported.
+\[
+x_n > (\overline{x}_n + LF \cdot \sigma_n) \quad \&\& \quad
+x_n - (\overline{x}_n + LF \cdot \sigma_n) > LL,
+\tag{4.4}
+\label{eq:leak_detection}
+\]
+\verb|LEAK_FACTOR| is set to $3$ and the \verb|LEAK_LIMIT| is set to $50$. These factors are chosen based on the observed trends of the provided, simulated stream of water meter data. In a client implementation these factors would have to be reevaluated based on the new water meter data and any requirements of the client.\\
+This means that a leak is reported, if the new value, $x_n$, deviates with more than three times the standard deviation, $\sigma_n$, from the mean, $\overline{x}_n$ and the deviation is larger than the minimum threshold, $LL$.\\\\
+By only storing the count, mean, variance, and standard deviation, we limit the amount of data kept per water meter. Also, by implementing Welford's on-line algorithm, we keep a running mean and standard deviation based on all previously measured values without having to cache or store any of them.\\
+\subsection{Leak Notification}
+\label{sec:not}
+If a leak has been detected the household associated with the given meter must be notified. Due to the severe implications of a leak notifications are sent by SMS\footnote{Implemented using an \href{https://www.smsapi.com/docs/\#1-introduction}{SMS API}.}. to quickly alert the inhabitants of the household. The contents of the SMS is sparse to ensure privacy. An example of this notification is shown in figure \ref{fig:sms-notification}, with the corresponding measurements illustrated in Grafana\footnote{The simulted stream of meter data has been illustrated in \href{http://130.226.140.2:3000/d/1V60Yo_mz/watermeters-simulations?orgId=1&from=now-24h&to=now}{Grafana}.}.
+\begin{figure}[H]\label{fig:sms-notification}
+	\centering
+	\includegraphics[width=0.3\linewidth]{images/sms}
+	\includegraphics[width=0.3\linewidth]{images/leak0917} \includegraphics[width=0.3\linewidth]{images/leak2316}
+	\caption{Two detected leaks at 23:16 and 09:17 and the corresponding SMS notifications.}
+\end{figure}
+
+\section{Billing}
+One of the required parts of the application is a billing system. Within our scope we have interpreted this to mean that we need to store accumulated values for every water meter and to be able connect these to an address in order to be able to bill individual households. We store these values with an id for every meter in a table in the database.\\
+\\
+The actual billing and handling of payment is out of our scope. Our focus is, as mentioned, primarily privacy; secondarily leak detection.
+
+\section{Database}
+We have chosen to use a relational database, a SQLite database, given the size of the project. As seen in Figure \ref{fig:db} it consists of four tables. These tables support all needed functionality. 
+\begin{itemize}
+	\item \textbf{Users} contains private information, about the users of associated with the meter, such as name, phone number and public key. 
+	\item \textbf{Meters} contains information about the total usage of the meters used for billing.
+	\item \textbf{Statistics} contains information needed to enable leak detection based on historic data, and to recover from system outages. 
+	\item \textbf{Personal} contains all measurements for each meter in encrypted form using the public key from the user table. 
+\end{itemize}
+
+ \begin{figure}[H]
+ 	\label{fig:db}
+ 	\centering
+ 	\includegraphics[width=0.7\linewidth]{images/db} 
+ 	\caption{The database of Ariel Service}
+ \end{figure}
+
+\section{Encryption and Decryption}
+As previously mentioned, the current implementation utilizes key-pairs from plain-text. For deployment, the implementation would need a new integration of the keyManager-interface in order to change the provider of keys.
+\\\\
+When the consumer is initially registered, log in is needed to make their public key available for Ariel Service. The service then stores the public key in the database. Each measurement will be encrypted using the public key of the given consumer and stored in the database. 
+\\\\
+Users will log into the Ariel App using NemID in order to authenticate their identity and access the private key for decryption (see Section \ref{sec:app}). Then, the app will receive data in an encrypted form from the Ariel Service. Finally, the data will be decrypted using the private key and then visualized. The structure of the privacy mechanisms is show in Figure \ref{fig:privacy}.
+\label{fig:privacy}
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{images/privacy-diagram.png}
+	\caption{Privacy mechanisms of Ariel Water}
+\end{figure}
+\\\\\textbf{Trade-offs}
+The privacy mechanisms come with a price of processing power and bandwidth. First, it is quite a heavy operation to decrypt the data in the Ariel App. Second, significant increase in transmitted data is required to send encrypted data. This is due to the server not having access to the data, which restricts any optimizations. A counter-measure could be to do the optimizations in the app and send the optimized data back. This would solve most of the performance constraints.
+\section{The Ariel App}
+\label{sec:app}
+The Ariel App will let users access and visualize their personal encrypted data. The user will log in using their NemID credentials in order to authenticate their identity and retrieve their private key. Upon receiving encrypted data, it will be decrypted using the private key and visualized to the user as shown in figure \ref{fig:app}.
+\begin{figure}[H]\label{fig:app}
+	\centering
+	\includegraphics[width=0.4\linewidth]{images/app1} \includegraphics[width=0.4\linewidth]{images/app2}
+ 	\caption{Screnshots of the Ariel Water App}
+\end{figure}
+
+% LEAK DETECTION NOTES
+%Welford's algorithm
+%https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+%https://invisibleblocks.wordpress.com/2008/07/30/long-running-averages-without-the-sum-of-preceding-values/
+%Running sum: avg' = n * (avg/n+1) + (v'/n+1)
+
+
+%https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+
+%https://alessior.wordpress.com/2017/10/09/onlinerecursive-variance-calculation-welfords-method/
+
+%https://www.embeddedrelated.com/showarticle/785.php
+
+%http://kunalbandekar.blogspot.com/2011/03/algorithms-for-calculating-variance.html
+
+%%%%%%%%% INPUT MANAGER IMPLEMENTATION %%%%%%%%%
+\section{Input Manager}
+The simulated stream of water meter data is published using the MQTT protocol. The InputManager handles parsing of the published messages from the TTN gateway using an MQTT Client, which subscribes to the MQTT topic of the gateway using its \emph{region}, \emph{appId}, and \emph{accessKey}. An \emph{MqttConnectOptions} object is passed to the constructor of the MQTT Client to ensure automatic reconnection to the TTN gateway in case of timeouts.\\\\
+The TTN gateway publishes a JSON object. The payload and timestamp is extracted from the JSON object by parsing it as an UplinkMessage\footnote{Data structure from the \href{https://github.com/TheThingsNetwork/java-app-sdk}{java-app-sdk}.}, which separates the metadata and payload and exposes methods for extracting certain elements of both. The timestamp for the measurements are easily extracted from the metadata and parsed as an internal Java Date object.\\\\
+The raw payload, encoded with a Base64 encoding, contains the actual measurements from the simulated stream of water meter data. The payload is initially decoded and parsed as a byte-array with a size equal to the number of meters. The measurements are then masked with '\verb|& 0xFF|', to convert them from an unsigned byte, and mapped to its respective meter in a Pair object.
+
+
+%TODO Structure
+%\begin{itemize}
+%	\item Payload description, what is used, UplinkMessage
+%	\item Decoding, signed bytes
+%	\item Client configuration
+%	\item Connection options (reconnect)
+%s\end{itemize}
+
+
+%TODO Structure of chapter
+%\begin{itemize}
+%	\item Billing system
+%	\item User Interface (App)
+%	\item Database
+%	\item Input Manager
+%	\item Parsing (unsigned bytes)
+%	\item Connection settings (reconnect), client
+%	\item Privacy Mechanisms
+%\end{itemize}
+

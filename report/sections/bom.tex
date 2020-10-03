@@ -1,0 +1,46 @@
+%TODO: fix scaling
+The complete bill of materials is listed in table \ref{tab:bom}, with a supplement of auxiliary components shown in table \ref{tab:bomaux}.
+
+% ====================== Primary ====================================
+\begin{table*}[]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Quantity} & \textbf{Type}  & \textbf{Component}                                   & \textbf{Value / Rating} & \textbf{Used in}                           \\ \midrule
+1                 & AC adapter     & 24V Power adapter (230V AC, to 24V DC)               & \textgreater 30W        & Power supply                               \\
+2                 & Buck converter & 24V to 5V (\&12V) buck converter (fx. XL6009)        & \textgreater{}= 2A      & Power supply                               \\
+2                 & Button         & Large push-button (non-latching)                     &                         & Flippers                                   \\
+2                 & Component      & Ball bearing (25mm diameter)                         &                         & Flipper assembly                           \\
+1                 & Display        & 7-segment display (MAX7219 8-bit digital controlled) &                         & Points display                             \\
+2                 & LED-strip      & 0.5m RGB LED-strip (fx 5050 SMD's)                   & 12V (\textless 1A)      & Lighting                                   \\
+3                 & Material       & Sheet (600 x 400 x 4mm) (MDF or Acrylic)             &                         & Complete laser cutting                     \\
+4                 & Material       & Spring                                               &                         & Ball launcher, Self-closing door, Flippers \\
+3                 & Material       & Elastic band                                         &                         & Pop bumpers                                \\
+1                 & Material       & Tubing                                               &                         & Ball return mechanism                      \\
+2                 & Material       & Bendable metal rods (50mm diameter)                  &                         & Ramp                                       \\
+4                 & Material       & Plywood (15 x 600 x 400mm)                           &                         & Outer box                                  \\
+5                 & MosFET         & IRF540N Mosfet (N-channel)                           & \textgreater{}2A @ 24V  & Flippers, Popbumpers                       \\
+4                 & Sensor         & IR sensor (4-pin, w. LM393 controller)               &                         & Dividers, Falldown detector                \\
+3                 & Solenoid       & Linear Solenoid                                      & 12V                     & Pop bumpers                                \\
+2                 & Solenoid       & Linear Solenoid                                      & 24V/12V                 & Flippers                                   \\
+4                 & Switch         & Low-resistance end limit-switch                      & 5V                      & Switch targets                             \\
+3                 & Transistor     & PN2222 High-current transistor                       & \textgreater{}1A @ 12V  & Lighting                                   \\ \bottomrule
+\end{tabular}
+\caption{Bill of materials}
+\label{tab:bom}
+\end{table*}
+
+% ========================== Auxiliary ====================== 
+\begin{table*}[]
+	\centering
+	\begin{tabular}{@{}llll@{}}
+		\toprule
+		\textbf{Type} & \textbf{Component}                              & \textbf{Value / Rating} & \textbf{Used in}        \\ \midrule
+		Nuts \& bolts & Various sizes, most around 2 \&3 mm in diameter &                         & Mounting                \\
+		Resistor      & Through-hole resistor                           & 1/4W                    & Various circuits        \\
+		LED           & 5 \& 3.5 mm LEDs, assortment of colours         & 5V                      & Lighting and decoration \\
+		Diode         & Kick-back absorbing diodes, fx. 1N4001          & \textgreater{}= 1A      & Flippers, Popbumpers    \\ \bottomrule
+	\end{tabular}
+	\caption{Auxiliary components (Quantity not specified)}
+	\label{tab:bomaux}
+\end{table*}

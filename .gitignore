@@ -1,0 +1,12 @@
+*.aux
+*.log
+*.out
+*.pdf
+*.synctex.gz
+*.gz
+*.ipch
+*.bin
+*.json
+*.bbl
+report/main.bbl
+*.bbl

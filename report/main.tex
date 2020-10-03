@@ -1,0 +1,105 @@
+% !TeX spellcheck = en_GB
+\documentclass{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{pdfpages}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{fullpage}
+\usepackage{scrextend}
+\usepackage[labelfont=bf]{caption}
+
+\graphicspath{ {img/} }
+
+\definecolor{pblue}{rgb}{0.13,0.13,1}
+\definecolor{pgreen}{rgb}{0,0.5,0}
+\definecolor{pred}{rgb}{0.9,0,0}
+\definecolor{pgrey}{rgb}{0.46,0.45,0.48}
+
+% Genereal LSTListing settings
+\lstdefinestyle{c} {
+	language=Java,
+	numbers=left,                   % where to put the line-numbers
+	numberstyle=\tiny\color{gray},  % the style that is used for the line-numbers
+	numbersep=8pt, 
+	basicstyle=\ttfamily\footnotesize,
+	showstringspaces=false,
+	showspaces=false,
+	showtabs=false,
+	breaklines=true,
+	tabsize=4,
+	breakatwhitespace=true,
+	commentstyle=\color{pgreen},
+	keywordstyle=\color{pblue},
+	stringstyle=\color{pred},
+	moredelim=[is][\textcolor{pgrey}]{\%\%}{\%\%},
+	frame = single, 				% For box around
+	rulecolor=\color{lightgray},
+	xleftmargin=\parindent,
+	aboveskip=\bigskipamount
+}
+
+% Line spacing stuff
+\linespread{1.25}
+\setlength\parindent{0pt}
+\parskip 3pt
+\expandafter\def\expandafter\normalsize\expandafter{%
+	\normalsize
+	\setlength\abovedisplayskip{0pt}
+	\setlength\belowdisplayskip{3pt}
+	\setlength\abovedisplayshortskip{0pt}
+	\setlength\belowdisplayshortskip{3pt}
+}
+%Used with scrextend package to allow fancy listing.
+\addtokomafont{labelinglabel}{\sffamily}
+
+% Title Page
+\title{
+	\textbf{How To Make Almost Anything:\\ Pinball Machine } \\
+	Exam Project 
+}
+
+\author{
+	Anders Valsted (aval@itu.dk) \\
+	Elisabeth Terp Reeve (elre@itu.dk) \\
+	Mathias Flintrup Jørgensen (mafj@itu.dk) \\
+	Rebecca Sofie Brenøe (rebr@itu.dk) \\[6pt]
+	{\small Course-code: KSHOMAA1KU }
+}
+
+\begin{document}
+\maketitle
+\newpage
+
+\section{Introduction}\label{intro}
+\input{chapters/intro}
+\section{Background}\label{background}
+\input{chapters/background}
+\section{Requirements}\label{requirements}
+\input{chapters/requirements}
+\section{Description}\label{description}
+\input{chapters/description}
+\section{Results/analysis}\label{analysis}
+\input{chapters/analysis}
+\section{Discussion}\label{discussion}
+\input{chapters/discussion}
+
+\bibliographystyle{plain}
+\bibliography{biblio}
+\newpage
+\appendix
+\subsection{Functional blocks overview}
+\input{sections/funcdiag}
+\subsection{Circuits}
+\input{sections/circuits}
+\subsection{Software overview}
+\input{sections/software} \label{appendix:programming model}
+\subsection{Laser cutting overview}
+\input{sections/cuts}
+\subsection{BOM}
+\input{sections/bom}
+
+\end{document}
